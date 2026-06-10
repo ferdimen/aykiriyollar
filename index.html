@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aykırı Yollar | Asfaltın Ötesinde</title>
+    <link id="dynamic-favicon" rel="icon" type="image/png" href="img/logo.png">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+    <style>
+        /* Modern-Asimetrik Minimalist Tema */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            overflow-x: hidden; /* Sayfa genelinde yatay kaydırmayı kesin olarak engeller */
+            width: 100%;
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        :root {
+            --bg-color: #fbfcfb; /* Çok temiz, parlak kırık beyaz */
+            --text-color: #242924; /* Karakterli, koyu füme-yeşil */
+            --accent-color: #3d5229; /* Derin çam yeşili */
+            --card-bg: #f4f6f3; /* Yumuşak bloklar */
+            --border-color: #1a231a; /* Netlik kazandıran ince koyu kontürler */
+            --input-bg: #ffffff;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.7;
+            padding-top: 85px; 
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            width: 100%;
+        }
+
+        /* Menubar (Dergi Tarzı, İnce Çizgili) */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: rgba(251, 252, 251, 0.96);
+            border-bottom: 2px solid var(--border-color);
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            height: 85px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            gap: 1.5rem;
+        }
+
+        /* LOGO CSS ALANI */
+        .logo-img {
+            width: 45px;
+            height: 45px;
+            object-fit: contain;
+            transform: rotate(60deg);
+            transition: transform 0.3s ease;
+        }
+
+        .logo-container:hover .logo-img {
+            transform: rotate(0deg) scale(2.05);
+        }
+
+        /* Menubar Hem İkon Hem Yazı Link Stilleri */
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            list-style: none;
+            align-items: center;
+        }
+
+        .nav-links a {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-color);
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-decoration: none;
+            gap: 4px;
+        }
+
+        .nav-links svg {
+            width: 22px;
+            height: 22px;
+            fill: var(--text-color);
+            transition: fill 0.2s ease;
+        }
+
+        .nav-links span {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            transition: color 0.2s ease;
+        }
+
+        /* Hover Etkileri */
+        .nav-links a:hover {
+            transform: translateY(-2px);
+        }
+
+        .nav-links a:hover svg {
+            fill: var(--accent-color);
+        }
+        
+        .nav-links a:hover span {
+            color: var(--accent-color);
+        }
+
+        /* YouTube Özel Rengi */
+        .nav-links .nav-youtube-icon svg {
+            fill: #cc181e;
+        }
+        .nav-links .nav-youtube-icon:hover svg {
+            fill: var(--border-color);
+        }
+        .nav-links .nav-youtube-icon:hover span {
+            color: var(--border-color);
+        }
+
+        /* BAŞLIK ALANI */
+        header {
+            position: relative;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            padding: 8rem 0;
+            border-bottom: 2px solid var(--border-color);
+            width: 100vw;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw;
+            transition: background-image 0.5s ease-in-out; 
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(251, 252, 251, 0.45); 
+            z-index: 1;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 2;
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        header h1 {
+            font-size: 4rem;
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: -2px;
+            color: var(--border-color);
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+        }
+
+        header p {
+            display: inline-block;
+            font-size: 1.15rem;
+            color: #ffffff;
+            background-color: var(--border-color);
+            font-weight: 700;
+            padding: 0.5rem 1rem;
+            margin-bottom: 2rem;
+            border-left: 4px solid var(--accent-color);
+            letter-spacing: 0.3px;
+        }
+
+        /* Bölüm Yapıları */
+        section {
+            padding: 5rem 0;
+            border-bottom: 1px solid #d1d9d1;
+            width: 100%;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            text-transform: uppercase;
+            margin-bottom: 3rem;
+        }
+
+        /* İNTERAKTİF HARİTA ALANI STİLLERİ */
+        .map-wrapper {
+            border: 2px solid var(--border-color);
+            background-color: var(--card-bg);
+            position: relative;
+            width: 100%;
+            box-shadow: -5px 5px 0px var(--border-color);
+            margin-bottom: 1.5rem;
+        }
+
+        #map {
+            width: 100%;
+            height: 480px;
+            z-index: 1;
+        }
+
+        .leaflet-popup-content-wrapper {
+            background-color: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 0px;
+            font-family: inherit;
+        }
+        .leaflet-popup-content h4 {
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            color: var(--border-color);
+        }
+        .leaflet-popup-content p {
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+            color: #444;
+        }
+        .leaflet-popup-tip {
+            background: var(--border-color);
+        }
+
+        /* Görsel Destekli Liste Düzeni */
+        .video-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            width: 100%;
+        }
+
+        .video-card {
+            background-color: var(--card-bg);
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: stretch;
+            gap: 0;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .video-card:hover {
+            background-color: #ecf0eb;
+            transform: translateX(5px);
+            box-shadow: -5px 5px 0px var(--border-color);
+        }
+
+        .video-img-wrapper {
+            width: 240px;
+            min-height: 100%;
+            flex-shrink: 0;
+            border-right: 2px solid var(--border-color);
+            background-color: #e2e8e2;
+        }
+
+        .video-thumb {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .video-content {
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            flex-grow: 1;
+            min-width: 0;
+        }
+
+        .video-info h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--border-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .video-info p {
+            font-size: 0.95rem;
+            color: #4a544a;
+        }
+
+        .video-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1.5rem;
+        }
+
+        /* Felsefe / Manifesto Alanı */
+        .manifesto-block {
+            margin-bottom: 3rem;
+        }
+        
+        .manifesto-lead {
+            font-size: 1.4rem;
+            line-height: 1.6;
+            font-weight: 600;
+            color: var(--border-color);
+            margin-bottom: 2rem;
+            border-left: 4px solid var(--accent-color);
+            padding-left: 1rem;
+        }
+
+        .manifesto-sub-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+        }
+
+        .manifesto-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .manifesto-card {
+            background-color: var(--card-bg);
+            padding: 1.5rem;
+            border: 1px solid #d1d9d1;
+        }
+
+        .manifesto-card h4 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--border-color);
+            text-transform: uppercase;
+        }
+
+        .manifesto-card p {
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .manifesto-foot {
+            font-size: 1.1rem;
+            font-style: italic;
+            font-weight: 500;
+            color: var(--accent-color);
+        }
+
+        /* Kolektif Arşiv & Not Alanı Stilleri */
+        .collab-box {
+            background-color: var(--card-bg);
+            border: 2px solid var(--border-color);
+            padding: 2.5rem;
+            margin-top: 2rem;
+            width: 100%;
+        }
+
+        .collab-rules {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .rule-card {
+            border-top: 2px solid var(--border-color);
+            padding-top: 1rem;
+        }
+
+        .rule-card h4 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .info-note {
+            background-color: #fff;
+            border-left: 4px solid var(--border-color);
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .info-note h4 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-note ol {
+            padding-left: 1.2rem;
+        }
+
+        .info-note li {
+            margin-bottom: 0.8rem;
+            font-size: 0.95rem;
+        }
+
+        /* İletişim Formu */
+        .contact-form {
+            max-width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            width: 100%;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        .form-group label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 1rem;
+            background-color: var(--input-bg);
+            border: 2px solid var(--border-color);
+            color: var(--text-color);
+            font-family: inherit;
+            font-weight: 500;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            background-color: #fff;
+            box-shadow: 4px 4px 0px var(--border-color);
+        }
+
+        /* Butonlar & Linkler */
+        .btn {
+            display: inline-block;
+            background-color: var(--border-color);
+            color: #fff;
+            padding: 0.8rem 2rem;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background-color: #fff;
+            color: var(--border-color);
+            box-shadow: 4px 4px 0px var(--border-color);
+        }
+
+        .btn-inline {
+            font-weight: 700;
+            color: var(--border-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 2px;
+        }
+
+        .btn-inline:hover {
+            color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        /* Footer */
+        footer {
+            padding: 4rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            font-weight: 500;
+            width: 100%;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1.2rem;
+        }
+
+        .social-icon svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--text-color);
+            transition: fill 0.2s ease, transform 0.2s ease;
+        }
+
+        .social-icon:hover svg {
+            fill: #cc181e;
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            padding: 3rem;
+            font-style: italic;
+            text-align: center;
+            color: var(--accent-color);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header h1 { font-size: 2.8rem; }
+            header p { font-size: 0.95rem; padding: 0.4rem 0.8rem; }
+            #map { height: 320px; }
+            .video-card { flex-direction: column; }
+            .video-img-wrapper { width: 100%; height: 180px; border-right: none; border-bottom: 2px solid var(--border-color); }
+            .contact-form { grid-template-columns: 1fr; }
+            .form-group.full-width { grid-column: span 1; }
+            footer { flex-direction: column; gap: 1.5rem; text-align: center; }
+            .nav-links { gap: 0.8rem; }
+            .nav-links span { font-size: 0.65rem; letter-spacing: 0; }
+            .nav-links svg { width: 18px; height: 18px; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="nav-container">
+            <div class="logo-container">
+                <a href="#" style="display: flex; align-items: center;">
+                    <img src="img/logo.png" alt="Aykırı Yollar" class="logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <span style="display:none; font-weight:900; letter-spacing:1px; color:var(--border-color);">AYKIRI YOLLAR</span>
+                </a>
+            </div>
+            <ul class="nav-links">
+                <li>
+                    <a href="#felsefe">
+                        <svg viewBox="0 0 24 24"><path d="M21 4H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-1 14H4V6h16v12zm-2-2H6v-2h12v2zm0-4H6V10h12v2z"/></svg>
+                        <span>Felsefe</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#harita">
+                        <svg viewBox="0 0 24 24"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
+                        <span>Harita</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#kolektif">
+                        <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                        <span>Kolektif</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#videolar">
+                        <svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55 Ext.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4zM14 13h-3v3H9v-3H6v-2h3V8h2v3h3v2z"/></svg>
+                        <span>Videolar</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#iletisim">
+                        <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                        <span>İletişim</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="https://www.youtube.com/@aykiriyollar" target="_blank" class="nav-youtube-icon">
+                        <svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93 .502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                        <span>YouTube</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <header id="dynamicHeader">
+        <div class="header-content">
+            <h1>Aykırı<br>Yollar</h1>
+            <p>Ana yolların bittiği, patikaların başladığı yerde.</p>
+            <br>
+            <a href="#iletisim" class="btn">Bizimle İletişime Geçin</a>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <section id="felsefe">
+            <h2 class="section-title">Yolun Hakikati</h2>
+            <div class="manifesto-block">
+                <p class="manifesto-lead">
+                    Ferdimen kanalında izlediğiniz müzikli, efektli ve hikaye odaklı kurguların aksine; bu kanalda sadece yolun kendisi var. Ne bir süsleme, ne de tempoyu artırmak için yapılan kesintiler... Sadece tekerleğin altından akıp giden yolun sesi ve karşıdan esen rüzgarın uğultusu. Ferdimen ve Aykırı Yollar logolarına dikkat ederseniz, ikisinin de aynı ambleme sahip olduğunu göreceksiniz. Bu rastlantı değil; iki kanal da aynı özü, aynı "aykırı" bakış açısını paylaşır.
+                </p>
+                
+                <h3 class="manifesto-sub-title">Bu kanalda neler bulacaksınız?</h3>
+                <div class="manifesto-grid">
+                    <div class="manifesto-card">
+                        <h4>Ham Görüntüler</h4>
+                        <p>Ana videolarda süre sınırına takılan, hızlandırılmış veya kesilmiş yolların en doğal, en uzun hali.</p>
+                    </div>
+                    <div class="manifesto-card">
+                        <h4>Yol Odaklı Deneyim</h4>
+                        <p>Hikaye anlatıcılığından ziyade, rotanın dokusuna ve sürüşün kendisine odaklanan kesitler.</p>
+                    </div>
+                    <div class="manifesto-card">
+                        <h4>Filtresiz Anadolu</h4>
+                        <p>Köy yolları, zorlu tırmanışlar, bitmek bilmeyen inişler ve o yolların tüm "aykırı" detayları.</p>
+                    </div>
+                </div>
+
+                <p class="manifesto-foot">
+                    Eğer sizin için de bisiklet turu sadece varmak değil, o yolun her kilometresini tüm çıplaklığıyla hissetmekse; doğru yerdesiniz. Burada fiyakalı kurgular yok, sadece yolun hakikati var.
+                </p>
+            </div>
+        </section>
+
+        <section id="harita">
+            <h2 class="section-title">Aykırı Rotalar Haritası</h2>
+            <p style="margin-bottom: 2rem; color: #444;">
+                Aşağıdaki harita üzerinden turların geçtiği ücra noktaları, dağ geçitlerini ve köy rotalarını inceleyebilirsiniz. İşaretçilere tıklayarak o rotanın ham yol videosuna doğrudan ulaşabilirsiniz.
+            </p>
+            <div class="map-wrapper">
+                <div id="map"></div>
+            </div>
+            <p style="font-size: 0.85rem; font-style: italic; color: var(--accent-color); font-weight: 600;">
+                * Harita üzerindeki noktalar sadece video verilerinde koordinat bilgisi barındıran özel geçişleri kapsar.
+            </p>
+        </section>
+
+        <section id="kolektif">
+            <h2 class="section-title">Kolektif Yol Arşivi</h2>
+            <p style="font-size: 1.15rem; margin-bottom: 1.5rem; font-weight: 500;">Yolun Sesi Ortak, Aykırı Yollar Hepimizin!</p>
+            <p style="margin-bottom: 1.5rem; color: #444;">
+                Bugüne kadar hep benim geçtiğim yolları, tekerleğimin altından akıp giden asfaltı veya toprağı izlediniz. Ancak "Aykırı Yollar" sadece benim geçtiğim yerlerden ibaret değil; bu, bir bakış açısı ve yolun ham haline olan bir tutku.
+            </p>
+            <p style="margin-bottom: 2rem; color: #444;">
+                Şimdi <strong>@aykiriyollar</strong> kanalını hep birlikte, kolektif bir yol arşivine dönüştürelim istiyorum. Sizin de geçtiğiniz o ıssız rotaları, rüzgarın sesinden başka bir şeyin duyulmadığı o anları burada, bu kanalın çatısı altında paylaşalım. Eğer sizin de "yolun kendisini" anlatan görüntüleriniz varsa, gelin bu yolu beraber ilerleyelim.
+            </p>
+
+            <div class="collab-box">
+                <h3 style="font-size: 1.3rem; font-weight: 800; text-transform: uppercase; letter-spacing: -0.5px;">Aradığımız Tek Bir Kriter Var: Sadelik.</h3>
+                <p style="font-style: italic; color: var(--accent-color); margin-top: 0.3rem; font-weight: 600;">Bu kanala dahil olacak videolarda bazı "aykırı" kurallarımız var:</p>
+                
+                <div class="collab-rules">
+                    <div class="rule-card">
+                        <h4>Odağımız Sadece Yol</h4>
+                        <p style="font-size: 0.9rem; color: #555;">Kendinizi ön plana çıkartmanıza, büyük selfie çekimlerine gerek yok. Biz kişileri değil, gidilen yönü merak ediyoruz.</p>
+                    </div>
+                    <div class="rule-card">
+                        <h4>Müzik ve Kurgu Yok</h4>
+                        <p style="font-size: 0.9rem; color: #555;">Klip tadında suni kurgular değil, o anın ham ve doğal gerçekliğinde kalmayı tercih ediyoruz.</p>
+                    </div>
+                    <div class="rule-card">
+                        <h4>Doğal Sesler Başrolde</h4>
+                        <p style="font-size: 0.9rem; color: #555;">Sadece tekerleğin zeminle teması, karşıdan vuran rüzgarın uğultusu og doğanın kendi yalın müziği...</p>
+                    </div>
+                </div>
+
+                <p style="font-weight: 600; margin-bottom: 1.5rem;">
+                    Eğer bu ruha uygun videolarınız varsa, videonuzu yüklerken <strong>@aykiriyollar</strong> kanalını "Ortak Çalışan" (Collaborator) olarak ekleyebilirsiniz. Böylece videonuz her iki kanalda da aynı anda, orijinal kalitesiyle yayınlanır.
+                </p>
+                
+                <p style="font-style: italic; font-weight: 500; color: var(--accent-color); margin-bottom: 2rem;">
+                    Yollar paylaştıkça çoğalır. Gelin, aykırı yolları birlikte arşive dönüştürelim.
+                </p>
+
+                <div class="info-note">
+                    <h4>
+                        <svg style="width:18px; height:18px; fill:var(--border-color);" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                        Not: YouTube Ortak Çalışan (Collaborator) Özelliği Nasıl Kullanılır?
+                    </h4>
+                    <p style="font-size: 0.9rem; color: #555; margin-bottom: 1rem;">
+                        YouTube'un "Ortak Çalışan" özelliği, bir videonun her iki kanalın da video listesinde görünmesini sağlar. İşte yapmanız gerekenler:
+                    </p>
+                    <ol>
+                        <li><strong>Videonuzu Yükleyin:</strong> Videonuzu kendi kanalınıza her zamanki gibi yükleyin.</li>
+                        <li><strong>Düzenleme Ekranına Gelin:</strong> YouTube Studio üzerinden videonun ayrıntılarına girin.</li>
+                        <li><strong>Ortak Çalışan Daveti Gönderin:</strong> Kanal linkini (<code>https://www.youtube.com/@aykiriyollar</code>) aratıp davet gönderin.</li>
+                        <li><strong>Onay Süreci:</strong> Davet onaylandığı an video ortaklaşa yayınlanır.</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div style="margin-top: 2.5rem; text-align: left;">
+                <a href="#iletisim" class="btn">Arşiv İçin Bize Yazın</a>
+            </div>
+        </section>
+
+        <section id="videolar">
+            <h2 class="section-title">Son Yayınlar</h2>
+            <div class="video-grid" id="videoContainer">
+                <p class="loading">Yollar taranıyor, videolar yükleniyor...</p>
+            </div>
+        </section>
+
+        <section id="iletisim">
+            <h2 class="section-title">Yoldan Yazın</h2>
+            <form class="contact-form" action="https://formspree.io/f/mlgknnqa" method="POST">
+                <div class="form-group">
+                    <label for="name">İsim ya da Mahlas</label>
+                    <input type="text" id="name" name="name" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="email">E-Posta Adresi</label>
+                    <input type="email" id="email" name="_replyto" required autocomplete="off">
+                </div>
+                <div class="form-group full-width">
+                    <label for="message">Mesajınız</label>
+                    <textarea id="message" name="message" rows="5" required></textarea>
+                </div>
+                <div class="form-group full-width" style="margin-top: 0.5rem;">
+                    <button type="submit" class="btn">Yola Gönder</button>
+                </div>
+            </form>
+        </section>
+
+        <footer>
+            <p>&copy; 2026 Aykırı Yollar. Bağımsız, reklamsız, sponsorsuz.</p>
+            <div class="social-links">
+                <a href="https://www.youtube.com/@aykiriyollar" target="_blank" class="social-icon" title="YouTube">
+                    <svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93 .502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                </a>
+            </div>
+        </footer>
+
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script>
+        // 1. Dinamik Favicon Döndürme Fonksiyonu
+        function createRotatedFavicon(imageSrc, degrees) {
+            const img = new Image();
+            img.crossOrigin = "anonymous"; 
+            img.src = imageSrc;
+
+            img.onload = function () {
+                const canvas = document.createElement('canvas');
+                canvas.width = 32;
+                canvas.height = 32;
+                const ctx = canvas.getContext('2d');
+
+                ctx.translate(canvas.width / 2, canvas.height / 2);
+                ctx.rotate((degrees * Math.PI) / 180);
+                ctx.drawImage(img, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
+
+                const faviconLink = document.getElementById('dynamic-favicon');
+                if (faviconLink) {
+                    faviconLink.href = canvas.toDataURL ? canvas.toDataURL('image/png') : canvas.toDataURL();
+                }
+            };
+        }
+
+        // 2. YouTube Thumbnail Oluşturucu
+        function getYoutubeThumb(url) {
+            let videoId = "";
+            try {
+                const urlObj = new URL(url);
+                if (urlObj.hostname.includes("youtube.com")) {
+                    videoId = urlObj.searchParams.get("v");
+                } else if (urlObj.hostname.includes("youtu.be")) {
+                    videoId = urlObj.pathname.split("/")[1];
+                }
+            } catch (e) {
+                console.error("Görsel oluşturulurken geçersiz URL saptandı:", url);
+            }
+            return videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : 'img/logo.png';
+        }
+
+        // 3. Sayfa Yüklendiğinde Tetiklenecek Olaylar
+        document.addEventListener("DOMContentLoaded", () => {
+            
+            createRotatedFavicon('img/logo.png', 65);
+
+            // RASTGELE ARKA PLAN SEÇİMİ
+            const headerElement = document.getElementById("dynamicHeader");
+            fetch('data/bg.json?v=' + new Date().getTime())
+                .then(response => {
+                    if (!response.ok) throw new Error('Arka plan dosyası bulunamadı.');
+                    return response.json();
+                })
+                .then(bgList => {
+                    if (bgList && bgList.length > 0) {
+                        const randomIndex = Math.floor(Math.random() * bgList.length);
+                        const selectedBg = bgList[randomIndex];
+                        headerElement.style.backgroundImage = `url('${selectedBg}')`;
+                    } else {
+                        headerElement.style.backgroundImage = "url('img/bg.jpg')";
+                    }
+                })
+                .catch(err => {
+                    console.error('Arka plan yükleme hatası:', err);
+                    headerElement.style.backgroundImage = "url('img/bg.jpg')";
+                });
+
+// İNTERAKTİF HARİTA BAŞLATMA BÖLÜMÜ
+const map = L.map('map').setView([39.0, 35.0], 6);
+
+// 1. Katman: Minimalist (Sitenin ana teması)
+const lightMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; CARTO'
+}).addTo(map);
+
+// 2. Katman: Topoğrafik (Dağlar ve Yükselti için)
+const topoMap = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenTopoMap'
+}); // Sayfa açılışında topoğrafik harita aktif gelir
+
+// Harita Seçim Menüsünü Oluştur
+const baseLayers = {
+    "Minimalist": lightMap,
+    "Topoğrafik": topoMap
+};
+
+L.control.layers(baseLayers).addTo(map);
+
+// Harita Verilerini Çekme (Daha önce yaptığımız gibi devam edebilirsin)
+fetch('data/video.json?v=' + new Date().getTime())
+    .then(response => response.json())
+    .then(data => {
+        data.forEach(video => {
+            if (video.konum) {
+                const koor = video.konum.split(',');
+                const lat = parseFloat(koor[0]);
+                const lng = parseFloat(koor[1]);
+
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    L.marker([lat, lng]).addTo(map)
+                        .bindPopup(`<h4>${video.title}</h4><a href="${video.url}" target="_blank" class="btn-inline">İzle</a>`);
+                }
+            }
+        });
+    });
+            // ORTAK VE TEK KANALDAN (video.json) VERİLERİ ÇEKME BÖLÜMÜ
+            const container = document.getElementById("videoContainer");
+            
+            fetch('data/video.json?v=' + new Date().getTime())
+                .then(response => {
+                    if (!response.ok) throw new Error('Veri dosyası bulunamadı.');
+                    return response.json();
+                })
+                .then(data => {
+                    container.innerHTML = "";
+
+                    if(data.length === 0) {
+                        container.innerHTML = "<p class='loading'>Henüz video eklenmedi.</p>";
+                        return;
+                    }
+
+                    data.forEach(video => {
+// --- A. HARİTAYA PİN EKLEME ADIMI ---
+if (video.konum) {
+    // "41.2056, 27.7815" verisini virgül ile bölerek iki ayrı sayıya dönüştür
+    const koor = video.konum.split(',');
+    const lat = parseFloat(koor[0]);
+    const lng = parseFloat(koor[1]);
+
+    if (!isNaN(lat) && !isNaN(lng)) {
+        const marker = L.marker([lat, lng]).addTo(map);
+        const popupContent = `
+            <div style="padding:5px;">
+                <h4>${video.title}</h4>
+                <p>${video.description || ''}</p>
+                <a href="${video.url}" target="_blank" class="btn-inline" style="font-size:0.8rem;">Yol Videosunu İzle &rarr;</a>
+            </div>
+        `;
+        marker.bindPopup(popupContent);
+    }
+}
+
+                        // --- B. LİSTEYE KART EKLEME ADIMI ---
+                        const card = document.createElement("div");
+                        card.className = "video-card";
+                        
+                        const computedThumb = getYoutubeThumb(video.url);
+
+                        card.innerHTML = `
+                            <div class="video-img-wrapper">
+                                <img src="${computedThumb}" alt="${video.title}" class="video-thumb">
+                            </div>
+                            <div class="video-content">
+                                <div class="video-info">
+                                    <h3>${video.title}</h3>
+                                    <p>${video.description}</p>
+                                </div>
+                                <div class="video-meta">
+                                    <span style="font-size:0.85rem; font-weight:600; color:#777;">Süre: ${video.duration || '-'}</span>
+                                    <a href="${video.url}" target="_blank" class="btn-inline">İzle &rarr;</a>
+                                </div>
+                            </div>
+                        `;
+                        container.appendChild(card);
+                    });
+                })
+                .catch(error => {
+                    console.error('Hata:', error);
+                    container.innerHTML = "<p class='loading' style='color:#c0392b;'>Videolar ve harita şu an yüklenemedi. Yerel sunucu (CORS) veya JSON formatını kontrol edin.</p>";
+                });
+        });
+    </script>
+
+</body>
+</html>
